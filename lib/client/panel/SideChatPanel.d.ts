@@ -10,9 +10,8 @@ export interface SideChatPanelProps {
     readonly onFirstSend: (question: string) => Promise<SideChatActionResult<void>>;
     readonly onClose: () => Promise<SideChatActionResult<void>>;
     readonly onRetry: () => Promise<SideChatActionResult<unknown>>;
-    readonly onFocusParent: () => void;
     readonly onAddToConversation?: () => void;
     readonly addToConversationDisabled?: boolean;
     readonly onRemoveSelection?: () => void;
 }
-export declare function SideChatPanel({ state, locale, embeddedConversation, modelControl, onDraftChange, onFirstSend, onClose, onRetry, onFocusParent, onAddToConversation, addToConversationDisabled, onRemoveSelection, }: SideChatPanelProps): import("react/jsx-runtime").JSX.Element;
+export declare function SideChatPanel({ state, locale, embeddedConversation, modelControl, onDraftChange, onFirstSend, onClose, onRetry, onAddToConversation, addToConversationDisabled, onRemoveSelection, }: SideChatPanelProps): import("react/jsx-runtime").JSX.Element;

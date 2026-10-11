@@ -18,7 +18,7 @@ const draftState: SideChatState = { phase: 'draft', parentSessionId: SessionId('
   draft: 'What does this mean?', messages: [] }
 const ok = async () => ({ ok: true as const, value: undefined })
 const panelProps = { state: draftState, onDraftChange: () => {}, onFirstSend: ok,
-  onClose: ok, onRetry: ok, onFocusParent: () => {} }
+  onClose: ok, onRetry: ok }
 afterEach(() => { cleanup(); vi.restoreAllMocks() })
 const NativeUserMessage = ({ node }: { readonly node: { readonly data: {
   readonly content: readonly unknown[]; readonly referenceLabels?: readonly string[]
@@ -72,11 +72,11 @@ describe('Side Chat panel and parent annotations', () => {
     expect(screen.getByText(selection.text)).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Send' }))
     await waitFor(() => expect(send).toHaveBeenCalledWith(draftState.draft))
-    fireEvent.click(screen.getByRole('button', { name: 'Close Side Chat' }))
+    fireEvent.keyDown(screen.getByLabelText('Side Chat'), { key: 'Escape' })
     expect(close).toHaveBeenCalledOnce()
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-    expect(screen.getByText('Read-only parent context; no Session copy')).toBeInTheDocument()
-    expect(screen.getByText('No tools or file changes')).toBeInTheDocument()
+    expect(screen.getByText('Side chats are temporary and disappear when closed or reloaded.')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Close Side Chat' })).not.toBeInTheDocument()
   })
   it('handles IME and Shift+Enter without sending, then sends on Enter', async () => {
     const send = vi.fn(ok)

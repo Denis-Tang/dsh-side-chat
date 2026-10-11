@@ -14,6 +14,27 @@ function fixture() {
   return { remote, sessions, controller }
 }
 describe('read-only Side Chat controller', () => {
+  it('opens without a selection and keeps the context boundary from opening time', async () => {
+    const { controller, remote, sessions } = fixture()
+    expect(controller.openDraft().ok).toBe(true)
+    expect(remote.createCalls).toHaveLength(0)
+    sessions.lastSeq = 19
+    expect((await controller.sendFirst('Explain the current task')).ok).toBe(true)
+    expect(remote.createCalls[0]).toMatchObject({ parentSessionId: 'parent-1', atSeq: 7 })
+    expect(remote.createCalls[0]?.selectedText).toBeUndefined()
+    await controller.close()
+    expect(controller.openDraft().ok).toBe(true)
+    expect(controller.getSnapshot()).toMatchObject({ boundarySeq: 19, messages: [], draft: '' })
+    await controller.dispose()
+  })
+  it('waits for completed parent context before opening without a selection', () => {
+    const { controller, remote, sessions } = fixture()
+    sessions.lastSeq = undefined
+    expect(controller.openDraft()).toMatchObject({ ok: false, error: { code: 'parent_session_not_ready' } })
+    expect(controller.getSnapshot().phase).toBe('closed')
+    expect(sessions.parentsRetained).toBe(0)
+    expect(remote.createCalls).toHaveLength(0)
+  })
   it('creates nothing until send, pins only the parent, and sends plain question text', async () => {
     const { controller, remote, sessions } = fixture()
     expect(controller.openDraft({ selection }).ok).toBe(true)

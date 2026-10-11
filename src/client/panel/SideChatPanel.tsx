@@ -6,7 +6,7 @@ import { SelectionQuote } from './SelectionQuote.js'
 import { SendIcon } from './SendIcon.js'
 import { SideChatBody } from './SideChatBody.js'
 import { SideChatErrorState } from './SideChatErrorState.js'
-import { SideChatHeader } from './SideChatHeader.js'
+import { IconNewChatOutlineRegular } from '@deepseek-ai/dsh-client-ui-primitives'
 import { useAutoGrowingTextarea } from './use-auto-growing-textarea.js'
 
 export interface SideChatPanelProps {
@@ -18,7 +18,6 @@ export interface SideChatPanelProps {
   readonly onFirstSend: (question: string) => Promise<SideChatActionResult<void>>
   readonly onClose: () => Promise<SideChatActionResult<void>>
   readonly onRetry: () => Promise<SideChatActionResult<unknown>>
-  readonly onFocusParent: () => void
   readonly onAddToConversation?: () => void
   readonly addToConversationDisabled?: boolean
   readonly onRemoveSelection?: () => void
@@ -33,7 +32,6 @@ export function SideChatPanel({
   onFirstSend,
   onClose,
   onRetry,
-  onFocusParent,
   onAddToConversation,
   addToConversationDisabled,
   onRemoveSelection,
@@ -66,14 +64,20 @@ export function SideChatPanel({
         }
       }}
     >
-      <SideChatHeader
-        phase={state.phase}
-        messages={messages}
-        {...onAddToConversation === undefined ? {} : { onAddToConversation }}
-        {...addToConversationDisabled === undefined ? {} : { addToConversationDisabled }}
-        onFocusParent={onFocusParent}
-        onClose={() => { void onClose() }}
-      />
+      {state.messages.length > 0 && onAddToConversation && (
+        <div className="dsh-side-chat-toolbar">
+          <button type="button" disabled={addToConversationDisabled} onClick={onAddToConversation}>
+            {messages.addToConversation}
+          </button>
+        </div>
+      )}
+      {state.messages.length === 0 && (
+        <div className="dsh-side-chat-empty">
+          <IconNewChatOutlineRegular size={32} />
+          <strong>{messages.title}</strong>
+          <span>{locale === 'zh-CN' ? '侧边聊天是临时聊天，关闭或刷新后会消失。' : 'Side chats are temporary and disappear when closed or reloaded.'}</span>
+        </div>
+      )}
 
       {state.error !== undefined && (
         <SideChatErrorState error={state.error} messages={messages} onRetry={() => { void onRetry() }} />
@@ -126,12 +130,6 @@ export function SideChatPanel({
           </form>
         )}
 
-      <footer className="dsh-side-chat-footer">
-        <span>{messages.temporary}</span>
-        <span>{messages.referenceOnly}</span>
-        <span>{messages.cannotReopen}</span>
-        <span>{messages.readOnly}</span>
-      </footer>
       <div className="dsh-side-chat-announcer" aria-live="polite">
         {state.phase === 'running' ? 'Side Chat running' : `Side Chat ${state.phase}`}
       </div>

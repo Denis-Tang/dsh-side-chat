@@ -11,13 +11,17 @@ import {
   removeConversationAnnotation,
   updateConversationAnnotation,
 } from '../../src/client/parent-composer/add-to-conversation.js'
-import { SideChatOverlay as Rc6SideChatOverlay } from '../../src/client/dsh/SideChatOverlay.js'
+import { SideChatOverlay, SideChatContent } from '../../src/client/dsh/SideChatOverlay.js'
 import { lexicalComposerReferenceFixture } from './composer-reference-fixture.js'
 import type { DshSideChatSessions as Rc6SideChatSessions } from '../../src/client/dsh/sessions-adapter.js'
 import { SideChatController } from '../../src/client/side-chat-controller.js'
 import type { ConversationSelection, SideChatModelSelection, SideChatRemote } from '../../src/shared/contracts.js'
 import { SessionId, SideChatId } from '../../src/shared/contracts.js'
 import { FakeClientSessions, FakeRemote } from '../fixtures/client-runtime.js'
+
+function Rc6SideChatOverlay(props: Parameters<typeof SideChatOverlay>[0]) {
+  return <><SideChatOverlay {...props} /><SideChatContent {...props} /></>
+}
 
 const render = (ui: Parameters<typeof renderReact>[0]) => renderReact(ui, {
   wrapper: ({ children }) => <div data-conversation-session="parent-1">{children}</div>,
@@ -457,7 +461,7 @@ describe('Side Chat overlay selection lifecycle', () => {
       expect(new SideChatModelPreferences(storage).get()).toEqual(chosen)
       expect(remote.streamModels[0]).toEqual(firstModel)
       expect(remote.cancelCalls).toHaveLength(0)
-      fireEvent.click(screen.getByRole('button', { name: 'Close Side Chat' }))
+      fireEvent.keyDown(screen.getByLabelText('Side Chat'), { key: 'Escape' })
       await waitFor(() => expect(controller.getSnapshot().phase).toBe('closed'))
 
       fireEvent.mouseUp(document.body)
@@ -658,6 +662,7 @@ describe('Side Chat overlay selection lifecycle', () => {
   it('does not archive a Side Chat when Escape is handled elsewhere', async () => {
     const sessions = {
       ...EMPTY_CONVERSATION_INPUT,
+      lastCompletedSeq: () => 7,
       subscribeList: () => () => {},
       currentSessionId: () => SessionId('parent-1'),
       face: () => undefined,

@@ -261,60 +261,6 @@ export function SideChatOverlay({
   const askDisabledReason = state.phase === 'closed'
     ? undefined
     : 'Close the current Side Chat before starting another one.'
-  const locale = navigator.language.toLowerCase().startsWith('zh') ? 'zh-CN' as const : 'en' as const
-  const modelDirectory = state.parentSessionId === undefined
-    ? undefined
-    : sessions.modelDirectory?.(state.parentSessionId)
-  const addToConversationDisabled = state.parentSessionId === undefined
-    || state.chatId === undefined || state.phase !== 'ready'
-    || !state.messages.some(message => message.role === 'assistant' && message.text.trim().length > 0)
-  const addToConversation = (): void => {
-    const parentSessionId = state.parentSessionId
-    const chatId = state.chatId
-    if (parentSessionId === undefined || chatId === undefined || state.phase !== 'ready') {
-      sessions.notify({ kind: 'warning', text: 'The Side Chat conversation is not ready to add yet.' })
-      return
-    }
-    const parentTitle = sessions.title(parentSessionId)
-    const reference = referencedSideChatConversation({
-      conversationId: chatId,
-      title: [locale === 'zh-CN' ? '侧边对话' : 'Side Chat', parentTitle].filter(Boolean).join(' · '),
-      messages: state.messages,
-    })
-    if (reference.conversation.length === 0) {
-      sessions.notify({ kind: 'warning', text: 'The Side Chat does not have any conversation history to add yet.' })
-      return
-    }
-    try {
-      if (!sessions.addSideChatToConversation(parentSessionId, reference)) {
-        sessions.notify({ kind: 'warning', text: 'Could not add the Side Chat to the main conversation.' })
-        return
-      }
-      void sessions.openSession(parentSessionId).then(() => focusConversationComposer(parentSessionId), () => {
-        sessions.notify({ kind: 'warning', text: 'The Side Chat was added, but its parent conversation could not be opened.' })
-      })
-    } catch {
-      sessions.notify({ kind: 'warning', text: 'Could not add the Side Chat to the main conversation.' })
-    }
-  }
-  const modelControl = modelDirectory === undefined
-    ? undefined
-    : (
-        <SideChatModelSelect
-          key={`${state.parentSessionId}:${state.chatId ?? 'draft'}`}
-          directory={modelDirectory}
-          selection={state.modelSelection}
-          locked={['creating', 'closing'].includes(state.phase) || state.error?.operation === 'close'}
-          running={state.phase === 'running'}
-          validateInitialSelection={state.chatId === undefined}
-          locale={locale}
-          onInitialize={(selection, options) => {
-            if (options.remember) void controller.selectModel(selection)
-            else controller.initializeModel(selection)
-          }}
-          onSelect={(selection) => controller.selectModel(selection)}
-        />
-      )
 
   return (
     <div className="dsh-side-chat-overlay">
@@ -408,6 +354,74 @@ export function SideChatOverlay({
           }}
         />
       )}
+
+    </div>
+  )
+}
+
+/** Chat content rendered by the native sidebar tab. */
+export function SideChatContent({ controller, sessions, onClose }: {
+  controller: SideChatController
+  sessions: DshSideChatSessions
+  onClose?: () => void
+}) {
+  const state = useSyncExternalStore(controller.subscribe, controller.getSnapshot, controller.getSnapshot)
+  const locale = navigator.language.toLowerCase().startsWith('zh') ? 'zh-CN' as const : 'en' as const
+  const modelDirectory = state.parentSessionId === undefined
+    ? undefined
+    : sessions.modelDirectory?.(state.parentSessionId)
+  const addToConversationDisabled = state.parentSessionId === undefined
+    || state.chatId === undefined || state.phase !== 'ready'
+    || !state.messages.some(message => message.role === 'assistant' && message.text.trim().length > 0)
+  const addToConversation = (): void => {
+    const parentSessionId = state.parentSessionId
+    const chatId = state.chatId
+    if (parentSessionId === undefined || chatId === undefined || state.phase !== 'ready') {
+      sessions.notify({ kind: 'warning', text: 'The Side Chat conversation is not ready to add yet.' })
+      return
+    }
+    const parentTitle = sessions.title(parentSessionId)
+    const reference = referencedSideChatConversation({
+      conversationId: chatId,
+      title: [locale === 'zh-CN' ? '侧边对话' : 'Side Chat', parentTitle].filter(Boolean).join(' · '),
+      messages: state.messages,
+    })
+    if (reference.conversation.length === 0) {
+      sessions.notify({ kind: 'warning', text: 'The Side Chat does not have any conversation history to add yet.' })
+      return
+    }
+    try {
+      if (!sessions.addSideChatToConversation(parentSessionId, reference)) {
+        sessions.notify({ kind: 'warning', text: 'Could not add the Side Chat to the main conversation.' })
+        return
+      }
+      void sessions.openSession(parentSessionId).then(() => focusConversationComposer(parentSessionId), () => {
+        sessions.notify({ kind: 'warning', text: 'The Side Chat was added, but its parent conversation could not be opened.' })
+      })
+    } catch {
+      sessions.notify({ kind: 'warning', text: 'Could not add the Side Chat to the main conversation.' })
+    }
+  }
+  const modelControl = modelDirectory === undefined
+    ? undefined
+    : (
+        <SideChatModelSelect
+          key={`${state.parentSessionId}:${state.chatId ?? 'draft'}`}
+          directory={modelDirectory}
+          selection={state.modelSelection}
+          locked={['creating', 'closing'].includes(state.phase) || state.error?.operation === 'close'}
+          running={state.phase === 'running'}
+          validateInitialSelection={state.chatId === undefined}
+          locale={locale}
+          onInitialize={(selection, options) => {
+            if (options.remember) void controller.selectModel(selection)
+            else controller.initializeModel(selection)
+          }}
+          onSelect={(selection) => controller.selectModel(selection)}
+        />
+      )
+
+  return <div className="dsh-side-chat-docked">
       {state.phase !== 'closed' && (
         <SideChatPanel
           state={state}
@@ -417,16 +431,15 @@ export function SideChatOverlay({
           modelControl={modelControl}
           onDraftChange={(draft) => { controller.setDraft(draft) }}
           onFirstSend={(question) => controller.sendFirst(question)}
-          onClose={() => controller.close()}
-          onRetry={() => controller.retry()}
-          onFocusParent={() => {
-            if (state.parentSessionId !== undefined) void sessions.openSession(state.parentSessionId)
+          onClose={async () => {
+            if (onClose) { onClose(); return { ok: true, value: undefined } }
+            return controller.close()
           }}
+          onRetry={() => controller.retry()}
           onAddToConversation={addToConversation}
           addToConversationDisabled={addToConversationDisabled}
           {...state.chatId === undefined ? { onRemoveSelection: () => { controller.clearSelection() } } : {}}
         />
       )}
-    </div>
-  )
+  </div>
 }

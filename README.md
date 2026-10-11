@@ -1,138 +1,59 @@
-# dsh-side-chat
+# DSH Side Chat
 
-Ask a focused follow-up about selected text without leaving your current conversation in **DeepSeek Harness Desktop or Web**.
+An enhanced version of [AHGGG/dsh-side-chat](https://github.com/AHGGG/dsh-side-chat) 1.0.2, preserving upstream Git history and the MIT license. Targets DeepSeek Harness `0.2.0-rc.2` with a Codex-style native right-sidebar chat.
 
 [简体中文](README.zh-CN.md)
 
-![Ask about selected text in Side Chat, then add the Side Chat conversation to the main chat](https://raw.githubusercontent.com/AHGGG/dsh-side-chat/master/docs/assets/side-chat-demo.gif)
+## Features
 
-## Install
+- Open the right sidebar and choose **New side chat**, alongside Terminal and Browser, with DSH's native outlined chat-plus icon.
+- Chat renders inside a native sidebar tab, with a centered empty state and a composer at the bottom that adapts to sidebar width.
+- Start without selecting text. The main conversation must have a completed turn; context freezes at its latest completed turn when the chat opens.
+- Selected-text questions, detailed explanations, annotations, and adding the discussion to the main conversation remain available.
+- Independent model and reasoning-effort selection, streaming replies, Stop, and native Markdown rendering.
 
-Use a Side Chat version that matches your DSH runtime:
+## Install this version
 
-| Side Chat | DeepSeek Harness runtime |
-| --- | --- |
-| `@ahggg/dsh-side-chat@1.0.2` | `0.2.0-rc.2` |
-| `@ahggg/dsh-side-chat@1.0.1` | `0.2.0-rc.1` |
+This enhanced version has not been published to npm. The npm package `@ahggg/dsh-side-chat@1.0.2` is the upstream version and does not include these changes. The package name is retained to update existing installations.
 
-The instructions below use **Side Chat 1.0.2 with DSH 0.2.0-rc.2**. If you are staying on DSH rc.1, keep Side Chat 1.0.1 until you upgrade the runtime.
+Use Node.js 22.19+ or 24+ and pnpm 11.7.0:
 
-### DeepSeek Harness Desktop
-
-In DeepSeek Harness Desktop `0.2.0-rc.2`, open the plugin installation dialog and enter the complete package spec:
-
-```text
-@ahggg/dsh-side-chat@1.0.2
-```
-
-Install it, then restart DeepSeek Harness Desktop. Use the Desktop app's plugin manager for Desktop installations; the CLI commands below target the Web profile.
-
-### Web (`dsh web`)
-
-Install the matching DSH CLI if needed, then install the pinned plugin version:
-
-```powershell
-npm install --global @deepseek-ai/dsh@0.2.0-rc.2
-dsh plugin --profile web add @ahggg/dsh-side-chat@1.0.2 --save-exact
-```
-
-Start DSH from the project you want the agent to work in:
-
-```powershell
-cd E:\path\to\your-project
-dsh web --port 3080
-```
-
-Open the URL printed by DSH. The plugin loads automatically in the Web client.
-
-### Local linked development
-
-When `dsh plugin --profile web list` shows the plugin coming from a `link:` workspace, DSH loads the committed `lib/client.js`, not `src/`. Rebuild after switching branches or changing client source, then restart the `dsh web` process:
-
-```powershell
+```sh
+git clone https://github.com/Denis-Tang/dsh-side-chat.git
+cd dsh-side-chat
 pnpm install --frozen-lockfile
 pnpm build
+npm pack --ignore-scripts
 ```
 
-## Use Side Chat
+In the Desktop plugin installation dialog, enter the full local path to `ahggg-dsh-side-chat-1.0.2.tgz`, then fully quit and restart DSH. The plugin manager can also install this repository's Git URL; built `lib/` files are committed.
 
-On phones and tablets, long-press text in a completed message to select it. The Side Chat action bar appears below the selection when there is room, leaving the browser's native selection bar above it. Use `Add to chat`, `More details`, or `Ask in side chat` directly from the touch action bar.
+For the Web profile, use a matching DSH CLI:
 
-1. Complete at least one turn in the main conversation.
-2. Select text inside one completed user or assistant message.
-3. Click `Add to chat` to add an optional comment before attaching the passage to the main composer, `More details` to send an explanation request immediately, or `Ask in side chat` to write a focused question.
-4. When writing your own message or question, press `Enter` to send it.
-5. After a Side Chat reply settles, click `Add to conversation` to attach that focused discussion to the main composer as one conversation reference.
-6. Click `×`, or press `Esc` while focused inside the Side Chat panel, when you are done. Escape in another composer or menu does not close Side Chat.
-
-Useful details:
-
-- `Shift+Enter` inserts a newline.
-- Use the model control beside Send, then **Effort**, to choose the model's thinking level. You can change it while a reply runs: that reply keeps its original settings, while the accepted choice applies to the next reply and is remembered for future **Ask in side chat** and **More details** requests in this client. It does not change the main conversation.
-- After clicking `Add to chat`, press `Enter` or click `Save` to keep the annotation. Click outside the comment box or click `Cancel` to discard it.
-- `Add to chat` keeps any existing draft text and can collect multiple numbered passages, each with its own optional comment, in one annotation capsule.
-- `Add to conversation` captures the Side Chat's user/assistant history, preserves the main draft, and refreshes the existing reference instead of duplicating it when clicked again.
-- The input grows with its content and becomes scrollable at its maximum height.
-- The composer has one action button: **Send** when idle, **Stop** while generating. It returns to Send after the reply finishes or stops, keeping any follow-up draft. Text entered while a send is pending stays in the composer.
-- Assistant replies use DSH's native Markdown rendering.
-- Hover over `N annotations` to preview every selected passage and its comment.
-- Before sending, hover over the annotation capsule and click `×` to remove it; after sending, the same capsule appears above the user message.
-- Your first Side Chat message displays the selected passage as one annotation and your question as plain text, not internal XML.
-- The main conversation stays visible. No child Session is created.
-
-## What happens to the conversation
-
-`Ask in side chat` and `More details` use direct, streaming model calls through DSH's configured provider. On the first send, the plugin captures a **read-only text snapshot** of the parent conversation through the selected message's completed turn. Later parent prompts are excluded, and this context stays fixed for follow-ups. Opening the draft alone makes no model call.
-
-Side Chat keeps its own temporary message history in memory. It does **not** fork, copy, create, or archive a DSH Session, run an Agent, or write a Session event log. It has **no tools, command execution, or file-editing capability**. Parent reasoning and image/file attachment bytes are omitted; historical tool text is only reference material. The initial model uses the saved Side Chat choice, or the selected parent turn's configuration. Changing it affects only subsequent Side Chat replies.
-
-Closing the panel, reloading/disconnecting the client, or unloading the plugin cancels active work and discards the temporary discussion. Host records also expire after 30 minutes idle. To keep a discussion, use **Add to conversation**, then **send the parent draft** to store the reference in the parent history. Adding a reference alone does not send it. References already added to the parent draft are separate from the temporary panel and survive its closure.
-
-The text snapshot and Side Chat history are sent to the model on each request, so normal provider token usage still applies; avoiding Session copies does not eliminate context tokens or guarantee cache reuse. Archived Sessions created by older plugin versions are not automatically deleted.
-
-## Current limitations
-
-- A selection must stay inside one completed message.
-- This is a text-only, read-only discussion, not a second Agent. Attachments, tools, Steer, and `/side` are not supported.
-- Closed or expired discussions cannot be reopened. There is no “keep as normal Session” action.
-- Context is limited to 2,097,152 characters and rejected rather than silently truncated. Each question is limited to 65,536 characters; each reply (including reasoning) to 262,144 characters. A discussion permits at most 64 questions and 2,097,152 question/reply/reasoning characters. Output limits produce an explicit error and keep only the displayed partial reply.
-- Model requests time out after two minutes. Provider-specific context/output limits may be lower.
-
-## Upgrade or remove
-
-### Desktop
-
-After upgrading Desktop to DSH `0.2.0-rc.2`, update or reinstall Side Chat through the app's plugin manager using this exact package spec, then restart the app:
-
-```text
-@ahggg/dsh-side-chat@1.0.2
+```sh
+dsh plugin --profile web add ./ahggg-dsh-side-chat-1.0.2.tgz
+dsh web
 ```
 
-If Desktop on DSH `0.2.0-rc.2` still reports that `@ahggg/dsh-side-chat@1.0.1` requires rc.1, it is loading the previous plugin version. Update the Desktop plugin to 1.0.2 and restart the app. Desktop and Web profiles have separate plugin installations; update the appropriate profile and keep DSH's compatibility check enabled.
+Restart the corresponding client after updates. Desktop and Web installations are separate; retain DSH's version compatibility checks.
 
-To uninstall, remove Side Chat through the Desktop app's plugin manager.
+## Usage and limits
 
-### Web
+Press Enter to send, Shift+Enter for a newline. Close the native tab or press Esc inside the chat composer to end the discussion. After a reply settles, **Add to conversation** attaches the discussion to the main draft; send that draft to persist it in the main history.
 
-To upgrade an existing Web installation to Side Chat `1.0.2` with DSH `0.2.0-rc.2`, install the matching CLI and re-add the exact plugin version. `add --save-exact` replaces the installed package version and keeps the dependency pinned:
+Side Chat uses read-only text context, creates no DSH Session, runs no tools, and edits no files. Parent reasoning and attachment bytes are omitted. Closing, reloading, disconnecting, or unloading discards the temporary discussion; references already added to the main conversation are retained separately. Idle records expire after 30 minutes. Only one Side Chat can be open per client. Normal model token usage applies.
 
-```powershell
-npm install --global @deepseek-ai/dsh@0.2.0-rc.2
-dsh plugin --profile web add @ahggg/dsh-side-chat@1.0.2 --save-exact
+## Development and validation
+
+```sh
+pnpm check
+pnpm clean-profile:verify
 ```
 
-Restart `dsh web` and reload the browser after updating. Remove the Web-profile plugin with:
+`pnpm check` verifies dependencies, types, lint, tests, and packaging. Rebuild after changing `src/` and commit the updated `lib/`; DSH loads these artifacts.
 
-```powershell
-dsh plugin --profile web remove @ahggg/dsh-side-chat
-```
+Local validation: 136 tests pass, along with type checks, lint, and packaging. The actual chat component has no horizontal overflow at widths of 360, 500, and 700 pixels. The Windows Desktop plugin is installed; live Desktop loading still requires a restart to verify.
 
-## License
+## License and attribution
 
-MIT
-
-## References
-
-- https://www.v2ex.com
-- https://linux.do
-- https://linux.sb
+[MIT](LICENSE). Original plugin: [AHGGG/dsh-side-chat](https://github.com/AHGGG/dsh-side-chat). This repository maintains the native sidebar layout, direct-create entry, and related improvements. This is a third-party plugin.

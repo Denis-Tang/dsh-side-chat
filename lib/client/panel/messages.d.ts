@@ -1,6 +1,5 @@
 export interface SideChatMessages {
     readonly title: string;
-    readonly close: string;
     readonly addToConversation: string;
     readonly placeholder: string;
     readonly send: string;
@@ -11,10 +10,6 @@ export interface SideChatMessages {
     readonly removeSelection: string;
     readonly expand: string;
     readonly collapse: string;
-    readonly temporary: string;
-    readonly referenceOnly: string;
-    readonly cannotReopen: string;
-    readonly readOnly: string;
     readonly retry: string;
     readonly genericError: string;
     readonly closeError: string;

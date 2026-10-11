@@ -1,4 +1,5 @@
 import { execFileSync } from 'node:child_process'
+import { existsSync } from 'node:fs'
 import { access, readFile, stat } from 'node:fs/promises'
 
 const packageManifest = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'))
@@ -143,7 +144,8 @@ const sourceFile = /\.(?:[cm]?[jt]sx?|json|ya?ml|sh|py|rb|go|rs)$/iu
 const excludedDirectory = /(?:^|\/)(?:node_modules|vendor|test|tests|docs?|examples?|fixtures?|benchmarks?|coverage|\.github)(?:\/|$)/iu
 const excludedMetadata = /(?:^|\/)(?:brief\.json|catalog-entry(?:\.draft)?\.json)$/iu
 const fixedSourcePaths = repositoryPaths.filter(path =>
-  sourceFile.test(path)
+  existsSync(new URL(path, repositoryRoot))
+  && sourceFile.test(path)
   && !excludedDirectory.test(path)
   && !excludedMetadata.test(path))
 const fixedSourceFiles = await Promise.all(fixedSourcePaths.map(async path => ({

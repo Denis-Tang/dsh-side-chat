@@ -1,7 +1,7 @@
 {
   "name": "@ahggg/dsh-side-chat",
   "version": "1.0.2",
-  "description": "Codex-style side conversations for DeepSeek Harness",
+  "description": "Native-sidebar side chats with inherited conversation context for DeepSeek Harness",
   "keywords": [
     "deepseek-harness",
     "dsh",
@@ -9,14 +9,11 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/AHGGG/dsh-side-chat.git"
+    "url": "git+https://github.com/Denis-Tang/dsh-side-chat.git"
   },
-  "homepage": "https://github.com/AHGGG/dsh-side-chat#readme",
+  "homepage": "https://github.com/Denis-Tang/dsh-side-chat#readme",
   "bugs": {
-    "url": "https://github.com/AHGGG/dsh-side-chat/issues"
-  },
-  "publishConfig": {
-    "access": "public"
+    "url": "https://github.com/Denis-Tang/dsh-side-chat/issues"
   },
   "type": "module",
   "main": "lib/index.js",
@@ -62,7 +59,8 @@
         "@deepseek-ai/dsh-client-ui-layout",
         "@deepseek-ai/dsh-client-ui-model-selection",
         "@deepseek-ai/dsh-client-ui-primitives",
-        "@deepseek-ai/dsh-client-ui-workspace"
+        "@deepseek-ai/dsh-client-ui-workspace",
+        "@deepseek-ai/dsh-client-ui-sidebar-right"
       ]
     },
     "compatibility": {
@@ -110,7 +108,8 @@
     "@deepseek-ai/dsh-session": "0.2.0-rc.2",
     "@deepseek-ai/dsh-session-query": "0.2.0-rc.2",
     "@deepseek-ai/dsh-typert-protocol": "0.2.0-rc.2",
-    "react": ">=18.2.0 <20.0.0"
+    "react": ">=18.2.0 <20.0.0",
+    "@deepseek-ai/dsh-client-ui-sidebar-right": "0.2.0-rc.2"
   },
   "devDependencies": {
     "@deepseek-ai/cordis": "4.0.4",
@@ -128,6 +127,7 @@
     "@deepseek-ai/dsh-client-ui-primitives": "0.2.0-rc.2",
     "@deepseek-ai/dsh-client-ui-renderer": "0.2.0-rc.2",
     "@deepseek-ai/dsh-client-ui-session": "0.2.0-rc.2",
+    "@deepseek-ai/dsh-client-ui-sidebar-right": "0.2.0-rc.2",
     "@deepseek-ai/dsh-client-ui-slots": "0.2.0-rc.2",
     "@deepseek-ai/dsh-client-ui-theme": "0.2.0-rc.2",
     "@deepseek-ai/dsh-client-ui-workspace": "0.2.0-rc.2",

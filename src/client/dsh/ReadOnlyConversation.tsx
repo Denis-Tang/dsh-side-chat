@@ -98,7 +98,7 @@ export function ReadOnlyConversation({ state, controller, modelControl, locale =
       {actionError !== undefined && <div className="dsh-side-chat-turn-notice" role="alert">{actionError}</div>}
     </div>
     <form className="dsh-side-chat-composer" data-composer-card="" onSubmit={event => { void submit(event) }}>
-      <textarea ref={inputRef} rows={1} value={draft} disabled={!interactive} placeholder="Reply in Side Chat"
+      <textarea ref={inputRef} rows={1} value={draft} disabled={!interactive} placeholder={locale === 'zh-CN' ? '继续讨论' : 'Reply in Side Chat'}
         onChange={event => { ++revision.current; setDraft(event.target.value) }}
         onKeyDown={event => {
           if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing && event.keyCode !== 229) {

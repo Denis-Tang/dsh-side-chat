@@ -42,6 +42,8 @@ export class SideChatController {
     if (this.getSnapshot().phase !== 'closed') return failure(localError('Close the current Side Chat first.', 'side_chat_already_open'))
     const parentSessionId = input.parentSessionId ?? this.sessions.currentSessionId()
     if (parentSessionId === undefined) return failure(localError('Start the main conversation first.', 'parent_session_missing'))
+    const boundarySeq = input.selection?.atSeq ?? this.sessions.lastCompletedSeq(parentSessionId)
+    if (boundarySeq === undefined) return failure(localError('Wait for a completed parent turn.', 'parent_session_not_ready', true))
     try {
       if (input.selection !== undefined) assertSelectionCurrent(input.selection, parentSessionId)
       this.releaseParent = this.sessions.retainParent(parentSessionId)
@@ -49,7 +51,7 @@ export class SideChatController {
       return failure(localError(cause instanceof Error ? cause.message : 'The parent conversation is unavailable.', 'selection_stale'))
     }
     ++this.generation
-    this.observable.publish({ phase: 'draft', parentSessionId, selection: input.selection,
+    this.observable.publish({ phase: 'draft', parentSessionId, boundarySeq, selection: input.selection,
       modelSelection: this.sessions.sideChatModelPreference(), draft: input.draft ?? '', messages: [] })
     return success(undefined)
   }
@@ -102,12 +104,10 @@ export class SideChatController {
       if (state.selection !== undefined && !this.sessions.selectionIsCurrent(state.selection)) {
         return this.fail(localError('Select the passage again before sending.', 'selection_stale'), 'create')
       }
-      const atSeq = state.selection?.atSeq ?? this.sessions.lastCompletedSeq(state.parentSessionId)
-      if (atSeq === undefined) return this.fail(localError('Wait for a completed parent turn.', 'parent_session_not_ready', true), 'create')
       const generation = this.generation
       this.observable.publish({ ...state, phase: 'creating', draft: text, error: undefined })
       const operation = this.invoke(() => this.remote.create({
-        parentSessionId: state.parentSessionId!, atSeq,
+        parentSessionId: state.parentSessionId!, atSeq: state.boundarySeq!,
         selectedText: state.selection?.text, modelSelection: state.modelSelection,
       }))
       this.creating = operation
